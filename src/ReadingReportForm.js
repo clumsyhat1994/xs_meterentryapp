@@ -2,22 +2,41 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Form, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useZxing } from "react-zxing";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCamera, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const ReadingReportForm = () => {
-  //const [meterId, setMeterId] = useState();
   const [meterData, setMeterData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [message, setMessage] = useState("");
-  //const [token,setToken] = useState(localStorage.getItem('jwtToken'));
   const [isLoading, setIsLoading] = useState(false);
-  //const { id: meterId } = useParams();
-  const meterId = 6;
+  const [scannedData, setScannedData] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const { id: meterId } = useParams();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     clearErrors,
   } = useForm();
+  const { scanRef, result: scanResult, error: scanError } = useZxing();
+
+  useEffect(() => {
+    if (scanResult) {
+      setScannedData(scanResult.getText());
+      setIsScanning(false);
+    }
+  }, [scanResult]);
+
+  useEffect(() => {
+    if (scanError) {
+      alert("二维码扫描失败，请重试！");
+      console.error("Error scanning QR code:", scanError);
+      setIsScanning(false);
+    }
+  }, [scanError]);
 
   const token = localStorage.getItem("authToken");
 
@@ -29,49 +48,62 @@ const ReadingReportForm = () => {
       console.log("***********************************");
       setIsLoading(true);
       /******************************************** */
-      setMeterData({ id: 12, location: "港口大厦一楼", last_reading: 108.5 });
+      setMeterData({
+        id: meterId,
+        location: "港口大厦一楼",
+        last_reading: 108.5,
+      });
       setIsLoading(false);
       return;
       /******************************************** */
-      axios
-        .get(`${GET_METER_INFO_URL}/${meterId}`)
-        .then((response) => {
-          setMeterData(response.data);
-        })
-        .catch((error) => {
-          setErrorMessage("扫描水表失败！请稍后再试。");
-          console.log("Error fetching meter data:", error);
-        })
-        .finally(() => setIsLoading(false));
+      // axios
+      //   .get(`${GET_METER_INFO_URL}/${meterId}`)
+      //   .then((response) => {
+      //     setMeterData(response.data);
+      //   })
+      //   .catch((error) => {
+      //     setErrorMessage("扫描水表失败！请稍后再试。");
+      //     console.log("Error fetching meter data:", error);
+      //   })
+      //   .finally(() => setIsLoading(false));
     } else {
       setErrorMessage("读取水表ID失败");
     }
   }, [meterId]);
+
+  // const handleScan = (result) => {
+  //   if (result) {
+  //     setScannedData(result.getText());
+  //     setIsScanning(false);
+  //   }
+  // };
+
+  // const handleScanError = () => {
+  //   console.error("Error scanning QR code:", scanError);
+  // };
 
   const onSubmit = (data) => {
     /******************************************** */
     setMessage("抄表成功！");
     return;
     /******************************************** */
-    if (meterId) {
-      setIsLoading(true);
-      axios
-        .post(`/api/meters/${meterId}/readings`, {
-          reading: parseFloat(data.reading),
-        })
-        .then((response) => {
-          setMessage("抄表成功！");
-          setErrorMessage("");
-        })
-        .catch((error) => {
-          setErrorMessage("系统忙，抄表失败！请稍后再试");
-          console.log("Error submitting reading:", error);
-        })
-        .finally(() => setIsLoading(false));
-    }
+    // if (meterId) {
+    //   setIsLoading(true);
+    //   axios
+    //     .post(`/api/meters/${meterId}/readings`, {
+    //       reading: parseFloat(data.reading),
+    //     })
+    //     .then((response) => {
+    //       setMessage("抄表成功！");
+    //       setErrorMessage("");
+    //     })
+    //     .catch((error) => {
+    //       setErrorMessage("抄表失败！请稍后再试");
+    //       console.log("Error submitting reading:", error);
+    //     })
+    //     .finally(() => setIsLoading(false));
+    // }
   };
-
-  console.log(meterData);
 
   return (
     <div className="row justify-content-center align-items-center min-vh-100">
@@ -82,6 +114,34 @@ const ReadingReportForm = () => {
               <span className="visually-hidden">加载中...</span>
             </div>
           )}
+          <div className="row mb-2">
+            {!isScanning ? (
+              <button
+                type="button"
+                className="btn btn secondary w-100 mb-3"
+                onClick={() => setIsScanning(true)}
+              >
+                <FontAwesomeIcon icon={faCamera} size="lg" />
+              </button>
+            ) : (
+              <div>
+                <h4>请扫描二维码</h4>
+                {/* <Reader
+                  onResult={handleScan}
+                  onError={handleScanError}
+                  constraints={{ video: { facingMode: "environment" } }}
+                /> */}
+                <video ref={scanRef} />
+                <button
+                  type="button"
+                  className="btn btn-danger w-100 mt-3"
+                  onClick={() => setIsScanning(false)}
+                >
+                  <FontAwesomeIcon icon={faTimes} size="lg" />
+                </button>
+              </div>
+            )}
+          </div>
           {meterData && (
             <form onSubmit={handleSubmit(onSubmit)}>
               <dl className="row g-0 mb-3">
