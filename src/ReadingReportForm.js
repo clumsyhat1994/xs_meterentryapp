@@ -130,7 +130,7 @@ const ReadingReportForm = () => {
               </button>
             ) : (
               <div>
-                <h4>请扫描二维码</h4>
+                <h4>请扫描二维码v1.1</h4>
                 {/* <Reader
                   onResult={handleScan}
                   onError={handleScanError}
