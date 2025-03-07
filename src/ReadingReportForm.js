@@ -21,22 +21,27 @@ const ReadingReportForm = () => {
     formState: { errors },
     clearErrors,
   } = useForm();
-  const { scanRef, result: scanResult, error: scanError } = useZxing();
 
-  useEffect(() => {
-    if (scanResult) {
-      setScannedData(scanResult.getText());
-      setIsScanning(false);
-    }
-  }, [scanResult]);
+  const { ref: scanRef } = useZxing({
+    onDecodeResult(result) {
+      console.log(result.getText());
+    },
+  });
 
-  useEffect(() => {
-    if (scanError) {
-      alert("二维码扫描失败，请重试！");
-      console.error("Error scanning QR code:", scanError);
-      setIsScanning(false);
-    }
-  }, [scanError]);
+  // useEffect(() => {
+  //   if (scanResult) {
+  //     setScannedData(scanResult.getText());
+  //     setIsScanning(false);
+  //   }
+  // }, [scanResult]);
+
+  // useEffect(() => {
+  //   if (scanError) {
+  //     alert("二维码扫描失败，请重试！");
+  //     console.error("Error scanning QR code:", scanError);
+  //     setIsScanning(false);
+  //   }
+  // }, [scanError]);
 
   const token = localStorage.getItem("authToken");
 
