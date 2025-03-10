@@ -12,10 +12,12 @@ import React from "react";
 import ReadingReportForm from "./ReadingReportForm";
 import AuthenticationPage from "./AuthenticationPage";
 import ProtectedRoute from "./ProtectedRoute";
+import { Scanner } from "./Scanner";
 const App = () => {
   return (
     <Router>
       <Routes>
+        <Route path="/scanner" element={<Scanner />} />
         <Route path="/login" element={<AuthenticationPage />} />
         <Route
           path="/meter-reading/:id"
