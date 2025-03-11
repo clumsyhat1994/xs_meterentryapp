@@ -43,7 +43,7 @@ const ReadingReportForm = () => {
   //   }
   // }, [scanError]);
 
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem("accessToken");
 
   const GET_METER_INFO_URL = "";
   const POST_METER_READING_URL = `api/meters/${meterId}/readings`;
@@ -130,7 +130,7 @@ const ReadingReportForm = () => {
               </button>
             ) : (
               <div>
-                <h4>请扫描二维码v1.1</h4>
+                <h4>请扫描二维码v1.2</h4>
                 {/* <Reader
                   onResult={handleScan}
                   onError={handleScanError}
@@ -147,6 +147,7 @@ const ReadingReportForm = () => {
               </div>
             )}
           </div>
+          <h4>{token}</h4>
           {meterData && (
             <form onSubmit={handleSubmit(onSubmit)}>
               <dl className="row g-0 mb-3">

@@ -31,6 +31,10 @@ const AuthenticationPage = () => {
     };
 
     data = mapFormFieldsToAPI(data, mapping);
+    const accessToken = "access_token_for_test ";
+    localStorage.setItem("accessToken", accessToken);
+
+    localStorage.setItem("loggedIn", "true");
 
     //************************************** */
     navigate("/meter-reading-test/6");
