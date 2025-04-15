@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 
-const LOGIN_URL = "";
-//const SIGNUP_URL = "";
+const LOGIN_URL = "http://phaseddd.s7.tunnelfrp.com/login";
 const AuthenticationPage = () => {
   const navigate = useNavigate();
   const {
@@ -31,22 +30,28 @@ const AuthenticationPage = () => {
     };
 
     data = mapFormFieldsToAPI(data, mapping);
-    const accessToken = "access_token_for_test ";
-    localStorage.setItem("accessToken", accessToken);
-
-    localStorage.setItem("loggedIn", "true");
-
     //************************************** */
-    navigate("/meter-reading-test/6");
-    return;
+    //navigate("/meter-reading-test/6");
     //************************************** */
     try {
       const response = await axios.post(LOGIN_URL, data);
-      localStorage.setItem("authToken", response.data.token);
-      navigate("/meter-reading");
-      clearErrors();
+      console.log(response.data);
+      console.log("token: ", localStorage.getItem("authToken"));
+      console.log("status: ", response.status);
+      console.log("code: ", response.data.code);
+      console.log("message: ", response.data.msg);
+      if (response.data.code == 200) {
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("loggedIn", "true");
+        setLoginError("");
+        clearErrors();
+        navigate("/meter-reading-test/1");
+      } else {
+        setLoginError(response.data.msg);
+      }
     } catch (error) {
-      setLoginError("用户名或密码错误！");
+      setLoginError("发生错误，请联系系统管理员！");
+      console.log("发生错误，请联系系统管理员！:", error);
     }
   };
 

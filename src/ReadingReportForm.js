@@ -12,8 +12,9 @@ const ReadingReportForm = () => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [scannedData, setScannedData] = useState("");
+  const [meterId, setMeterId] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
-  const { id: meterId } = useParams();
+  const { id: pathParamMeterId } = useParams();
 
   const {
     register,
@@ -45,36 +46,41 @@ const ReadingReportForm = () => {
 
   const token = localStorage.getItem("accessToken");
 
-  const GET_METER_INFO_URL = "";
-  const POST_METER_READING_URL = `api/meters/${meterId}/readings`;
+  const GET_METER_INFO_URL =
+    "http://phaseddd.s7.tunnelfrp.com/business/h5/getMeterInfoById";
+  const POST_METER_READING_URL =
+    "http://phaseddd.s7.tunnelfrp.com/business/h5/submitMeterReading";
+
+  const fetchMeterData = async () => {
+    console.log("jwt: ", localStorage.getItem("authToken"));
+    try {
+      const response = await axios.get(
+        `${GET_METER_INFO_URL}?id=${pathParamMeterId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
+      console.log("获取水表", response.data);
+      if (response.data.code === 200) {
+        setMeterData(response.data.data);
+        setMeterId(response.data.data.id);
+        setIsLoading(false);
+      } else {
+        setErrorMessage(response.data.msg);
+      }
+    } catch (error) {}
+  };
 
   useEffect(() => {
-    if (meterId) {
-      console.log("***********************************");
+    if (pathParamMeterId) {
       setIsLoading(true);
-      /******************************************** */
-      setMeterData({
-        id: meterId,
-        location: "港口大厦一楼",
-        last_reading: 108.5,
-      });
-      setIsLoading(false);
-      return;
-      /******************************************** */
-      // axios
-      //   .get(`${GET_METER_INFO_URL}/${meterId}`)
-      //   .then((response) => {
-      //     setMeterData(response.data);
-      //   })
-      //   .catch((error) => {
-      //     setErrorMessage("扫描水表失败！请稍后再试。");
-      //     console.log("Error fetching meter data:", error);
-      //   })
-      //   .finally(() => setIsLoading(false));
+      fetchMeterData();
     } else {
-      setErrorMessage("读取水表ID失败");
+      setErrorMessage("扫描水表ID失败");
     }
-  }, [meterId]);
+  }, [pathParamMeterId]);
 
   // const handleScan = (result) => {
   //   if (result) {
@@ -88,26 +94,38 @@ const ReadingReportForm = () => {
   // };
 
   const onSubmit = (data) => {
-    /******************************************** */
-    setMessage("抄表成功！");
-    return;
-    /******************************************** */
-    // if (meterId) {
-    //   setIsLoading(true);
-    //   axios
-    //     .post(`/api/meters/${meterId}/readings`, {
-    //       reading: parseFloat(data.reading),
-    //     })
-    //     .then((response) => {
-    //       setMessage("抄表成功！");
-    //       setErrorMessage("");
-    //     })
-    //     .catch((error) => {
-    //       setErrorMessage("抄表失败！请稍后再试");
-    //       console.log("Error submitting reading:", error);
-    //     })
-    //     .finally(() => setIsLoading(false));
-    // }
+    console.log("开始抄表");
+    if (meterId) {
+      setIsLoading(true);
+      axios
+        .post(
+          POST_METER_READING_URL,
+          {
+            id: meterId,
+            readingValue: parseFloat(data.reading),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
+        )
+        .then((response) => {
+          console.log("抄表", response.data);
+          if (response.data.code === 200) {
+            setMessage("抄表成功！");
+            setErrorMessage("");
+            fetchMeterData();
+          } else {
+            setErrorMessage(response.data.msg);
+          }
+        })
+        .catch((error) => {
+          setErrorMessage("抄表失败,请联系管理员");
+          console.log("Error submitting reading:", error);
+        })
+        .finally(() => setIsLoading(false));
+    }
   };
 
   return (
@@ -154,11 +172,11 @@ const ReadingReportForm = () => {
                 <dt className="col-4">水表ID：</dt>
                 <dd className="col-8 fw-bold">{meterData.id}</dd>
 
-                <dt className="col-4">水表定位：</dt>
-                <dd className="col-8 fw-bold">{meterData.location}</dd>
+                <dt className="col-4">水表名称：</dt>
+                <dd className="col-8 fw-bold">{meterData.meterName}</dd>
 
                 <dt className="col-4">上月读数：</dt>
-                <dd className="col-8 fw-bold">{meterData.last_reading}</dd>
+                <dd className="col-8 fw-bold">{meterData.latestReading}</dd>
               </dl>
               <label htmlFor="reading" className="form-label fw-bold">
                 本月读数:
@@ -183,8 +201,12 @@ const ReadingReportForm = () => {
               >
                 确认
               </button>
+              {errorMessage && (
+                <div className="alert alert-danger" role="alert">
+                  {errorMessage}
+                </div>
+              )}
               {message && <p className="text-success">{message}</p>}
-              {errorMessage && <p className="text-danger">{errorMessage}</p>}
             </form>
           )}
         </div>
