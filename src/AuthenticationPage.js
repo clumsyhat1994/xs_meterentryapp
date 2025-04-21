@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 
@@ -14,6 +14,9 @@ const AuthenticationPage = () => {
   } = useForm();
 
   const [loginError, setLoginError] = useState(null);
+  const location = useLocation();
+
+  const from = location.state?.from ?? "/";
 
   const mapFormFieldsToAPI = (data, mapping) => {
     const transformedData = {};
@@ -40,12 +43,11 @@ const AuthenticationPage = () => {
       console.log("status: ", response.status);
       console.log("code: ", response.data.code);
       console.log("message: ", response.data.msg);
-      if (response.data.code == 200) {
+      if (response.data.code === 200) {
         localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("loggedIn", "true");
         setLoginError("");
         clearErrors();
-        navigate("/meter-reading-test/1");
+        navigate(from, { replace: true });
       } else {
         setLoginError(response.data.msg);
       }

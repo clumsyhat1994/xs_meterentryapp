@@ -1,68 +1,51 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Form, useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useZxing } from "react-zxing";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCamera, faTimes } from "@fortawesome/free-solid-svg-icons";
+import api from "./api";
+
+import { Scanner } from "./Scanner";
 
 const ReadingReportForm = () => {
   const [meterData, setMeterData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [scannedData, setScannedData] = useState("");
   const [meterId, setMeterId] = useState(null);
-  const [isScanning, setIsScanning] = useState(false);
   const { id: pathParamMeterId } = useParams();
-
+  const navigate = useNavigate();
+  const { pathname: currentPath } = useLocation();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
     clearErrors,
   } = useForm();
-
-  const { ref: scanRef } = useZxing({
-    onDecodeResult(result) {
-      console.log(result.getText());
-    },
-  });
-
-  // useEffect(() => {
-  //   if (scanResult) {
-  //     setScannedData(scanResult.getText());
-  //     setIsScanning(false);
-  //   }
-  // }, [scanResult]);
-
-  // useEffect(() => {
-  //   if (scanError) {
-  //     alert("二维码扫描失败，请重试！");
-  //     console.error("Error scanning QR code:", scanError);
-  //     setIsScanning(false);
-  //   }
-  // }, [scanError]);
-
-  const token = localStorage.getItem("accessToken");
 
   const GET_METER_INFO_URL =
     "http://phaseddd.s7.tunnelfrp.com/business/h5/getMeterInfoById";
   const POST_METER_READING_URL =
     "http://phaseddd.s7.tunnelfrp.com/business/h5/submitMeterReading";
 
-  const fetchMeterData = async () => {
-    console.log("jwt: ", localStorage.getItem("authToken"));
+  const redirectToLogin = useCallback(() => {
+    if (window.location.pathname !== "/login") {
+      navigate("/login", {
+        state: { from: currentPath },
+        replace: true,
+      });
+    }
+  }, [navigate, currentPath]);
+
+  const fetchMeterData = useCallback(async () => {
     try {
-      const response = await axios.get(
-        `${GET_METER_INFO_URL}?id=${pathParamMeterId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        }
+      const response = await api.get(
+        `${GET_METER_INFO_URL}?id=${pathParamMeterId}`
       );
       console.log("获取水表", response.data);
+      if (response.data.code === 401) {
+        redirectToLogin();
+        return;
+      }
       if (response.data.code === 200) {
         setMeterData(response.data.data);
         setMeterId(response.data.data.id);
@@ -70,8 +53,10 @@ const ReadingReportForm = () => {
       } else {
         setErrorMessage(response.data.msg);
       }
-    } catch (error) {}
-  };
+    } catch (error) {
+      setErrorMessage("系统错误，请联系管理员！");
+    }
+  }, [pathParamMeterId, redirectToLogin]);
 
   useEffect(() => {
     if (pathParamMeterId) {
@@ -80,41 +65,24 @@ const ReadingReportForm = () => {
     } else {
       setErrorMessage("扫描水表ID失败");
     }
-  }, [pathParamMeterId]);
-
-  // const handleScan = (result) => {
-  //   if (result) {
-  //     setScannedData(result.getText());
-  //     setIsScanning(false);
-  //   }
-  // };
-
-  // const handleScanError = () => {
-  //   console.error("Error scanning QR code:", scanError);
-  // };
+  }, [pathParamMeterId, fetchMeterData]);
 
   const onSubmit = (data) => {
-    console.log("开始抄表");
     if (meterId) {
       setIsLoading(true);
-      axios
-        .post(
-          POST_METER_READING_URL,
-          {
-            id: meterId,
-            readingValue: parseFloat(data.reading),
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            },
-          }
-        )
+      api
+        .post(POST_METER_READING_URL, {
+          id: meterId,
+          readingValue: parseFloat(data.reading),
+        })
         .then((response) => {
-          console.log("抄表", response.data);
+          if (response.data.code === 401) {
+            redirectToLogin();
+          }
           if (response.data.code === 200) {
             setMessage("抄表成功！");
             setErrorMessage("");
+            reset();
             fetchMeterData();
           } else {
             setErrorMessage(response.data.msg);
@@ -137,35 +105,7 @@ const ReadingReportForm = () => {
               <span className="visually-hidden">加载中...</span>
             </div>
           )}
-          <div className="row mb-2">
-            {!isScanning ? (
-              <button
-                type="button"
-                className="btn btn secondary w-100 mb-3"
-                onClick={() => setIsScanning(true)}
-              >
-                <FontAwesomeIcon icon={faCamera} size="lg" />
-              </button>
-            ) : (
-              <div>
-                <h4>请扫描二维码v1.2</h4>
-                {/* <Reader
-                  onResult={handleScan}
-                  onError={handleScanError}
-                  constraints={{ video: { facingMode: "environment" } }}
-                /> */}
-                <video ref={scanRef} />
-                <button
-                  type="button"
-                  className="btn btn-danger w-100 mt-3"
-                  onClick={() => setIsScanning(false)}
-                >
-                  <FontAwesomeIcon icon={faTimes} size="lg" />
-                </button>
-              </div>
-            )}
-          </div>
-          <h4>{token}</h4>
+          {/* <Scanner /> */}
           {meterData && (
             <form onSubmit={handleSubmit(onSubmit)}>
               <dl className="row g-0 mb-3">
@@ -201,13 +141,14 @@ const ReadingReportForm = () => {
               >
                 确认
               </button>
-              {errorMessage && (
-                <div className="alert alert-danger" role="alert">
-                  {errorMessage}
-                </div>
-              )}
+
               {message && <p className="text-success">{message}</p>}
             </form>
+          )}{" "}
+          {errorMessage && (
+            <div className="alert alert-danger" role="alert">
+              {errorMessage}
+            </div>
           )}
         </div>
       </div>
