@@ -144,7 +144,7 @@ const ReadingReportForm = () => {
 
               {message && <p className="text-success">{message}</p>}
             </form>
-          )}{" "}
+          )}
           {errorMessage && (
             <div className="alert alert-danger" role="alert">
               {errorMessage}

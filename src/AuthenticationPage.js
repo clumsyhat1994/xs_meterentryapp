@@ -15,7 +15,6 @@ const AuthenticationPage = () => {
 
   const [loginError, setLoginError] = useState(null);
   const location = useLocation();
-
   const from = location.state?.from ?? "/";
 
   const mapFormFieldsToAPI = (data, mapping) => {
