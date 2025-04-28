@@ -5,7 +5,7 @@ export const Scanner = ({ onScan }) => {
   const [error, setError] = useState(null);
   const ref_html5QrCode = useRef(null);
   const ref_running = useRef(false);
-
+  const [scanResult, setScanResult] = useState("");
   useEffect(() => {
     const qrRegionId = "qr-reader";
     const html5QrCode = new Html5Qrcode(qrRegionId);
@@ -14,22 +14,22 @@ export const Scanner = ({ onScan }) => {
     html5QrCode
       .start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        { fps: 10, qrbox: { width: 250, height: 250 }, verbose: false },
         (decodedText) => {
+          setError(null);
+          setScanResult(decodedText);
           onScan(decodedText);
           html5QrCode.stop();
         },
         (scanError) => {
-          console.warn(scanError);
-          setError(scanError);
+          console.debug("Scan error: ", scanError);
         }
       )
       .then(() => {
         ref_running.current = true;
       })
       .catch((err) => {
-        console.log(err);
-        setError(err);
+        setError("启动摄像头失败：", err.message);
       });
 
     return () => {
@@ -48,6 +48,12 @@ export const Scanner = ({ onScan }) => {
           id="qr-reader"
           style={{ width: 250, height: 250, margin: "auto" }}
         />
+        {scanResult && (
+          <div className="mt-3">
+            <strong>扫描结果：</strong>
+            {scanResult}
+          </div>
+        )}
       </div>
     </>
   );

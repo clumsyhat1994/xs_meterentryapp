@@ -51,8 +51,8 @@ const AuthenticationPage = () => {
         setLoginError(response.data.msg);
       }
     } catch (error) {
-      setLoginError("发生错误，请联系系统管理员！");
-      console.log("发生错误，请联系系统管理员！:", error);
+      setLoginError("未知错误，请联系系统管理员！");
+      console.log("未知错误，请联系系统管理员！:", error);
     }
   };
 

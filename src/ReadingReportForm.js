@@ -109,17 +109,19 @@ const ReadingReportForm = () => {
           {meterData && (
             <form onSubmit={handleSubmit(onSubmit)}>
               <dl className="row g-0 mb-3">
-                <dt className="col-4">水表ID：</dt>
-                <dd className="col-8 fw-bold">{meterData.id}</dd>
+                <dt className="col-5">水表ID：</dt>
+                <dd className="col-7 fw-bold">{meterData.id}</dd>
 
-                <dt className="col-4">水表名称：</dt>
-                <dd className="col-8 fw-bold">{meterData.meterName}</dd>
+                <dt className="col-5">水表名称：</dt>
+                <dd className="col-7 fw-bold">{meterData.meterName}</dd>
 
-                <dt className="col-4">上月读数：</dt>
-                <dd className="col-8 fw-bold">{meterData.latestReading}</dd>
+                <dt className="col-5">上次抄表读数：</dt>
+                <dd className="col-7 fw-bold">{meterData.latestReading}</dd>
+                <dt className="col-5">上次抄表时间：</dt>
+                <dd className="col-7 fw-bold">{meterData.latestReadingTime}</dd>
               </dl>
               <label htmlFor="reading" className="form-label fw-bold">
-                本月读数:
+                本次读数:
               </label>
               <input
                 id="reading"
@@ -142,7 +144,11 @@ const ReadingReportForm = () => {
                 确认
               </button>
 
-              {message && <p className="text-success">{message}</p>}
+              {message && (
+                <div className="alert alert-success mt-3" role="alert">
+                  {message}
+                </div>
+              )}
             </form>
           )}
           {errorMessage && (
