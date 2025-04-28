@@ -39,21 +39,20 @@ export const Scanner = ({ onScan }) => {
 
   return (
     <>
-      <div className="text-center p-3">
-        <h4>请扫描二维码v1</h4>
-        {error && (
-          <div className="alert alert-danger">启动摄像头失败：{error}</div>
-        )}
-        <div
-          id="qr-reader"
-          style={{ width: 250, height: 250, margin: "auto" }}
-        />
-        {scanResult && (
-          <div className="mt-3">
-            <strong>扫描结果：</strong>
-            {scanResult}
-          </div>
-        )}
+      <div className="position-relative overflow-hidden vw-100 vh-100">
+        <div id="qr-reader" className="w-100 h-100" />
+        <div className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-between align-items-center text-white p-3 pe-none z-1">
+          <h4 className="pe-auto">请扫描二维码v1</h4>
+          {error && (
+            <div className="alert alert-danger">启动摄像头失败：{error}</div>
+          )}
+          {scanResult && (
+            <div className="pe-auto">
+              <strong>扫描结果：</strong>
+              {scanResult}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
