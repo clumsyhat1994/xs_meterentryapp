@@ -69,8 +69,9 @@ const ReadingReportForm = () => {
       meterData.latestReadingTime?.split(" ")[0] ||
       new Date().toISOString.slice(0, 10);
     const baseDate = new Date(baseDateStr);
-    baseDate.setDate(baseDate.getDate() - 2);
+    baseDate.setMonth(baseDate.getMonth() - 2);
     const startTime = baseDate.toISOString().slice(0, 10);
+
     console.log("startTime:", startTime);
 
     try {
