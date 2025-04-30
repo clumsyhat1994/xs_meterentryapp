@@ -29,7 +29,7 @@ export const Scanner = ({ onScan }) => {
         ref_running.current = true;
       })
       .catch((err) => {
-        setError("启动摄像头失败：", err.message);
+        setError("启动摄像头失败：", err);
       });
 
     return () => {
@@ -43,9 +43,7 @@ export const Scanner = ({ onScan }) => {
         <div id="qr-reader" className="w-100 h-100" />
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-between align-items-center text-white p-3 pe-none z-1">
           <h4 className="pe-auto">请扫描二维码v1</h4>
-          {error && (
-            <div className="alert alert-danger">启动摄像头失败：{error}</div>
-          )}
+          {error && <div className="alert alert-danger">{error}</div>}
           {scanResult && (
             <div className="pe-auto">
               <strong>扫描结果：</strong>

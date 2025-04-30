@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import api from "./api";
-
 import { Scanner } from "./Scanner";
 
 const ReadingReportForm = () => {
@@ -11,6 +10,10 @@ const ReadingReportForm = () => {
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [meterId, setMeterId] = useState(null);
+  const [readingHistory, setReadingHistory] = useState([]);
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  //const [readingHistoryStartTime, setReadingHistoryStartTime] = useState(null);
+
   const { id: pathParamMeterId } = useParams();
   const navigate = useNavigate();
   const { pathname: currentPath } = useLocation();
@@ -26,7 +29,10 @@ const ReadingReportForm = () => {
     "http://phaseddd.s7.tunnelfrp.com/business/h5/getMeterInfoById";
   const POST_METER_READING_URL =
     "http://phaseddd.s7.tunnelfrp.com/business/h5/submitMeterReading";
-
+  const GET_READING_LIST_URL =
+    "http://phaseddd.s7.tunnelfrp.com/business/h5/getMeterReadingList";
+  console.log("History url: ", GET_READING_LIST_URL);
+  const NUM_OF_READING_ENTRY = 5;
   const redirectToLogin = useCallback(() => {
     if (window.location.pathname !== "/login") {
       navigate("/login", {
@@ -58,6 +64,45 @@ const ReadingReportForm = () => {
     }
   }, [pathParamMeterId, redirectToLogin]);
 
+  const fetchReadingHistory = useCallback(async () => {
+    const baseDateStr =
+      meterData.latestReadingTime?.split(" ")[0] ||
+      new Date().toISOString.slice(0, 10);
+    const baseDate = new Date(baseDateStr);
+    baseDate.setDate(baseDate.getDate() - 2);
+    const startTime = baseDate.toISOString().slice(0, 10);
+    console.log("startTime:", startTime);
+
+    try {
+      if (!meterId) return;
+      const url = `${GET_READING_LIST_URL}?id=${meterId}&startTime=${startTime}`;
+      const response = await api.get(url);
+      if (response.data.code === 200 && Array.isArray(response.data.data)) {
+        setReadingHistory(response.data.data);
+        console.log("抄表历史", response.data.data);
+      } else {
+        console.warn("Failed to load reading history: ", response.data.msg);
+      }
+    } catch (err) {
+      console.error("History fetch error:", err);
+    }
+  }, [meterData, meterId]);
+
+  const renderRows = () => {
+    const list = showAllHistory
+      ? readingHistory
+      : readingHistory.slice(0, NUM_OF_READING_ENTRY);
+    return list.map((item, index) => {
+      return (
+        <tr key={index}>
+          <td>{item.readingValue}</td>
+          <td>{item.readingTime}</td>
+          <td>{item.readerName}</td>
+        </tr>
+      );
+    });
+  };
+
   useEffect(() => {
     if (pathParamMeterId) {
       setIsLoading(true);
@@ -66,6 +111,12 @@ const ReadingReportForm = () => {
       setErrorMessage("扫描水表ID失败");
     }
   }, [pathParamMeterId, fetchMeterData]);
+
+  useEffect(() => {
+    if (meterId) {
+      fetchReadingHistory();
+    }
+  }, [meterId, fetchReadingHistory]);
 
   const onSubmit = (data) => {
     if (meterId) {
@@ -105,7 +156,6 @@ const ReadingReportForm = () => {
               <span className="visually-hidden">加载中...</span>
             </div>
           )}
-          {/* <Scanner /> */}
           {meterData && (
             <form onSubmit={handleSubmit(onSubmit)}>
               <dl className="row g-0 mb-3">
@@ -138,22 +188,48 @@ const ReadingReportForm = () => {
               )}
               <button
                 type="submit"
-                className="btn btn-primary w-100"
+                className="btn btn-primary w-100 mb-2"
                 style={{ backgroundColor: "rgb(23, 51, 114)", border: "none" }}
               >
                 确认
               </button>
 
               {message && (
-                <div className="alert alert-success mt-3" role="alert">
+                <div className="alert alert-success mb-2" role="alert">
                   {message}
                 </div>
               )}
             </form>
           )}
           {errorMessage && (
-            <div className="alert alert-danger" role="alert">
+            <div className="alert alert-danger mb-2" role="alert">
               {errorMessage}
+            </div>
+          )}
+          {readingHistory.length > 0 && (
+            <div>
+              <h6 className="text-center border-bottom mt-3 fw-bold">
+                近两天抄表历史
+              </h6>
+              <table className="table table-sm">
+                <thead>
+                  <tr>
+                    <th>读数</th>
+                    <th>抄表时间</th>
+                    <th>抄表人</th>
+                  </tr>
+                </thead>
+                <tbody>{renderRows()}</tbody>
+              </table>
+              {readingHistory.length > 5 && (
+                <button
+                  type="button"
+                  className="btn btn-link p-0"
+                  onClick={() => setShowAllHistory((v) => !v)}
+                >
+                  {showAllHistory ? "收起" : "展开"}
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -36,3 +36,9 @@
     transform: rotate(360deg);
   }
 }
+
+#qr-reader video {
+  width: auto !important;
+  height: 100% !important;
+  object-fit: cover;
+}
