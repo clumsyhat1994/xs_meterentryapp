@@ -210,7 +210,7 @@ const ReadingReportForm = () => {
           {readingHistory.length > 0 && (
             <div>
               <h6 className="text-center border-bottom mt-3 fw-bold">
-                近两天抄表历史
+                近两月抄表历史
               </h6>
               <table className="table table-sm">
                 <thead>
