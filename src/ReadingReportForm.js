@@ -31,7 +31,7 @@ const ReadingReportForm = () => {
     "http://phaseddd.s7.tunnelfrp.com/business/h5/submitMeterReading";
   const GET_READING_LIST_URL =
     "http://phaseddd.s7.tunnelfrp.com/business/h5/getMeterReadingList";
-  console.log("History url: ", GET_READING_LIST_URL);
+
   const NUM_OF_READING_ENTRY = 5;
   const redirectToLogin = useCallback(() => {
     if (window.location.pathname !== "/login") {
@@ -72,8 +72,6 @@ const ReadingReportForm = () => {
     baseDate.setMonth(baseDate.getMonth() - 2);
     const startTime = baseDate.toISOString().slice(0, 10);
 
-    console.log("startTime:", startTime);
-
     try {
       if (!meterId) return;
       const url = `${GET_READING_LIST_URL}?id=${meterId}&startTime=${startTime}`;
@@ -89,6 +87,10 @@ const ReadingReportForm = () => {
     }
   }, [meterData, meterId]);
 
+  const clearMessages = () => {
+    setMessage("");
+    setErrorMessage("");
+  };
   const renderRows = () => {
     const list = showAllHistory
       ? readingHistory
@@ -120,6 +122,7 @@ const ReadingReportForm = () => {
   }, [meterId, fetchReadingHistory]);
 
   const onSubmit = (data) => {
+    clearMessages();
     if (meterId) {
       setIsLoading(true);
       api
@@ -185,7 +188,9 @@ const ReadingReportForm = () => {
                 placeholder="输入水表读数"
               />
               {errors.reading && (
-                <div className="invalid-feedback">{errors.reading.message}</div>
+                <div className="invalid-feedback  mb-2">
+                  {errors.reading.message}
+                </div>
               )}
               <button
                 type="submit"
@@ -209,7 +214,7 @@ const ReadingReportForm = () => {
           )}
           {readingHistory.length > 0 && (
             <div>
-              <h6 className="text-center border-bottom mt-3 fw-bold">
+              <h6 className="text-center border-bottom mt-3 fw-bold pb-2">
                 近两月抄表历史
               </h6>
               <table className="table table-sm">

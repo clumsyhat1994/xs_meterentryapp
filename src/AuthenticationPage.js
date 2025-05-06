@@ -32,9 +32,7 @@ const AuthenticationPage = () => {
     };
 
     data = mapFormFieldsToAPI(data, mapping);
-    //************************************** */
-    //navigate("/meter-reading-test/6");
-    //************************************** */
+
     try {
       const response = await axios.post(LOGIN_URL, data);
       console.log(response.data);
