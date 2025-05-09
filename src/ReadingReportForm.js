@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import api from "./api";
-import { Scanner } from "./Scanner";
 
 const ReadingReportForm = () => {
   const [meterData, setMeterData] = useState(null);
@@ -12,7 +11,6 @@ const ReadingReportForm = () => {
   const [meterId, setMeterId] = useState(null);
   const [readingHistory, setReadingHistory] = useState([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
-  //const [readingHistoryStartTime, setReadingHistoryStartTime] = useState(null);
 
   const { id: pathParamMeterId } = useParams();
   const navigate = useNavigate();
@@ -47,7 +45,7 @@ const ReadingReportForm = () => {
       const response = await api.get(
         `${GET_METER_INFO_URL}?id=${pathParamMeterId}`
       );
-      console.log("获取水表", response.data);
+
       if (response.data.code === 401) {
         redirectToLogin();
         return;
@@ -60,6 +58,7 @@ const ReadingReportForm = () => {
         setErrorMessage(response.data.msg);
       }
     } catch (error) {
+      redirectToLogin();
       setErrorMessage("系统错误，请联系管理员！");
     }
   }, [pathParamMeterId, redirectToLogin]);
@@ -78,7 +77,6 @@ const ReadingReportForm = () => {
       const response = await api.get(url);
       if (response.data.code === 200 && Array.isArray(response.data.data)) {
         setReadingHistory(response.data.data);
-        console.log("抄表历史", response.data.data);
       } else {
         console.warn("Failed to load reading history: ", response.data.msg);
       }
@@ -87,10 +85,6 @@ const ReadingReportForm = () => {
     }
   }, [meterData, meterId]);
 
-  const clearMessages = () => {
-    setMessage("");
-    setErrorMessage("");
-  };
   const renderRows = () => {
     const list = showAllHistory
       ? readingHistory
@@ -122,7 +116,7 @@ const ReadingReportForm = () => {
   }, [meterId, fetchReadingHistory]);
 
   const onSubmit = (data) => {
-    clearMessages();
+    setErrorMessage("");
     if (meterId) {
       setIsLoading(true);
       api
@@ -184,8 +178,25 @@ const ReadingReportForm = () => {
                 className={`form-control  mb-2 ${
                   errors.reading ? "is-invalid" : ""
                 }`}
-                {...register("reading", { required: "请输入读数" })}
+                {...register("reading", {
+                  required: "请输入读数",
+                  onChange: (e) => {
+                    setMessage("");
+                    e.target.setCustomValidity("");
+                    if (!e.target.validity.valid)
+                      e.target.setCustomValidity(
+                        "请输入数字，最大精度为小数点后两位"
+                      );
+                  },
+                })}
                 placeholder="输入水表读数"
+                onInvalid={(e) => {
+                  const { validity } = e.target;
+                  console.log(validity);
+                  e.target.setCustomValidity(
+                    "请输入数字，最大精度为小数点后两位"
+                  );
+                }}
               />
               {errors.reading && (
                 <div className="invalid-feedback  mb-2">
