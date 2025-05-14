@@ -20,7 +20,6 @@ const ReadingReportForm = () => {
     handleSubmit,
     formState: { errors },
     reset,
-    clearErrors,
   } = useForm();
 
   const GET_METER_INFO_URL =
@@ -199,7 +198,7 @@ const ReadingReportForm = () => {
                 }}
               />
               {errors.reading && (
-                <div className="invalid-feedback  mb-2">
+                <div className="invalid-feedback mb-2">
                   {errors.reading.message}
                 </div>
               )}

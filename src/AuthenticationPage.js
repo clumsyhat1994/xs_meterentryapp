@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useForm } from "react-hook-form";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const LOGIN_URL = "http://phaseddd.s7.tunnelfrp.com/login";
 const AuthenticationPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from ?? "/";
+
   const {
     register,
     handleSubmit,
@@ -14,8 +18,7 @@ const AuthenticationPage = () => {
   } = useForm();
 
   const [loginError, setLoginError] = useState(null);
-  const location = useLocation();
-  const from = location.state?.from ?? "/";
+  const [showPassword, setShowPassword] = useState(false);
 
   const mapFormFieldsToAPI = (data, mapping) => {
     const transformedData = {};
@@ -35,11 +38,6 @@ const AuthenticationPage = () => {
 
     try {
       const response = await axios.post(LOGIN_URL, data);
-      console.log(response.data);
-      console.log("token: ", localStorage.getItem("authToken"));
-      console.log("status: ", response.status);
-      console.log("code: ", response.data.code);
-      console.log("message: ", response.data.msg);
       if (response.data.code === 200) {
         localStorage.setItem("authToken", response.data.token);
         setLoginError("");
@@ -82,18 +80,34 @@ const AuthenticationPage = () => {
                 </div>
               )}
             </div>
-            <div className="form-group mb-3">
+            <div className="form-group mb-3 position-relative">
               <label htmlFor="password" className="form-lable">
                 密码：
               </label>
               <input
                 id="password"
-                type="password"
-                className={`form-control ${
+                type={showPassword ? "text" : "password"}
+                className={`form-control pe-5 ${
                   errors.password ? "is-invalid" : ""
                 }`}
                 {...register("password", { required: "请输入密码" })}
               />
+              <button
+                type="button"
+                className="btn btn-link position-absolute end-0 me-1"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                style={{ top: "1.4rem" }}
+              >
+                {showPassword ? <FaEye /> : <FaEyeSlash />}
+              </button>
+              {/* <span
+                className="position-relative"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "隐藏密码" : "显示密码"}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span> */}
               {errors.password && (
                 <div className="invalid-feedback">
                   {errors.password.message}
