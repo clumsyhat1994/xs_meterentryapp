@@ -99,7 +99,11 @@ const AuthenticationPage = () => {
                 aria-label={showPassword ? "隐藏密码" : "显示密码"}
                 style={{ top: "1.4rem" }}
               >
-                {showPassword ? <FaEye /> : <FaEyeSlash />}
+                {showPassword ? (
+                  <FaEye className="text-secondary" />
+                ) : (
+                  <FaEyeSlash className="text-secondary" />
+                )}
               </button>
               {/* <span
                 className="position-relative"
